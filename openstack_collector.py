@@ -18,6 +18,7 @@ This is a tool to collect informations from OpenStack nodes.
 
 Version history:
     0.1.0 - Initial version
+    0.1.1 - Additional Support for Ceilometer, Cinder, Keystone, Nova, Neutron & OpenVSwitch
 """
 
 import ConfigParser
@@ -90,7 +91,16 @@ class Node(object):
         'iscsi_session': ('iscsiadm -m session', False),
         'fc_hba_info': ('systool -c fc_host -v', False),
         'disk_by_path': ('ls -l /dev/disk/by-path', False),
-        'multipath_ll': ('multipath -ll', True)
+        'multipath_ll': ('multipath -ll', True),
+        'ip_a': ('ip a', False),
+        'platform_os': ('cat /etc/redhat-release', True),
+        'platform_kernel': ('uname -r', True),
+        'lspci': ('lspci', True),
+        'lshw': ('lshw', True),
+        'dmidecode': ('dmidecode', True),
+        'uptime': ('uptime', False),
+        'os_service_status': ('openstack-service status', False),
+        'os_status': ('openstack-status', False)
     }
 
     @classmethod
@@ -230,6 +240,8 @@ def get_file(src_node, src_file, destination):
            'ip': src_node.ip,
            'file_path': src_file}
     cmd = ['scp', '-r', src, destination]
+    logger.info(
+        "Start Command:" %cmd)
     prompts = ['continue connecting (yes/no)?', 'password:']
     child = pexpect.spawn(' '.join(cmd))
     p = child.expect(prompts)
@@ -311,7 +323,7 @@ def main():
     if nodes_name:
         nodes = [
             Node.construct_node(conf, e, host) for e in nodes_name.split(',')
-        ]
+            ]
 
     # Create the directory to storage the informations
     root = mk_collection_dir(host)
